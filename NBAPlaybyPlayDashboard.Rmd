@@ -1,0 +1,140 @@
+---
+title: "Untitled"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(shiny)
+library(lubridate)
+library(chron)
+library(plotly)
+```
+
+```{r, include=FALSE}
+df <- read.csv("C:\\Users\\Nick\\Documents\\School\\Artifex\\Semester 2\\NBACombined.csv")
+
+
+df$original_x <- as.numeric(df$original_x)
+df$original_y <- as.numeric(df$original_y)
+df$remaining_time <- times(df$remaining_time)
+df$elapsed <- times(df$elapsed)
+df$play_length <- times(df$play_length)
+df$season = str_split(df$data_set, " ", simplify = TRUE)[,2]
+df$player[df$player == "Enes Kanter"] <- "Enes Freedom"
+df$team[df$team == "ATL"] <- "Atlanta Hawks"
+df$team[df$team == "BKN"] <- "Brooklyn Nets"
+df$team[df$team == "BOS"] <- "Boston Celtics"
+df$team[df$team == "CHA"] <- "Charlotte Hornets"
+df$team[df$team == "CHI"] <- "Chicago Bulls"
+df$team[df$team == "CLE"] <- "Cleveland Cavaliers"
+df$team[df$team == "DAL"] <- "Dallas Mavericks"
+df$team[df$team == "DEN"] <- "Denver Nuggets"
+df$team[df$team == "DET"] <- "Detroit Pistons"
+df$team[df$team == "GSW"] <- "Golden State Warriors"
+df$team[df$team == "HOU"] <- "Houston Rockets"
+df$team[df$team == "IND"] <- "Indiana Pacers"
+df$team[df$team == "LAC"] <- "Los Angeles Clippers"
+df$team[df$team == "LAL"] <- "Los Angeles Lakers"
+df$team[df$team == "MEM"] <- "Memphis Grizzlies"
+df$team[df$team == "MIA"] <- "Miami Heat"
+df$team[df$team == "MIL"] <- "Milwaukee Bucks"
+df$team[df$team == "MIN"] <- "Minnesota Timberwolves"
+df$team[df$team == "NOP"] <- "New Orleans Pelicans"
+df$team[df$team == "NYK"] <- "New York Knicks"
+df$team[df$team == "OKC"] <- "Oklahoma City Thunder"
+df$team[df$team == "ORL"] <- "Orlando Magic"
+df$team[df$team == "PHI"] <- "Philadelphia 76ers"
+df$team[df$team == "PHX"] <- "Pheonix Suns"
+df$team[df$team == "POR"] <- "Portland Trail Blazers"
+df$team[df$team == "SAC"] <- "Sacramento Kings"
+df$team[df$team == "SAS"] <- "San Antonio Spurs"
+df$team[df$team == "TOR"] <- "Toronto Raptors"
+df$team[df$team == "UTA"] <- "Utah Jazz"
+df$team[df$team == "WAS"] <- "Washington Wizards"
+
+
+#df$three_pointer = grepl("3PT", df$description)
+#df$date <- mdy(df$date)
+``` 
+
+```{r, include=FALSE}
+players <- function(teamname) {
+  df <- df %>% 
+    filter(team == teamname, event_type == "shot") %>%
+    select(player) %>% 
+    distinct(player) %>%
+    arrange(player) %>% 
+    return(player)
+}
+teams <- df %>% 
+  select(team) %>%
+  filter(team != "") %>% 
+  distinct(team) %>% 
+  arrange(team)
+View(teams)
+```
+
+
+Column {.sidebar} 
+-------------------------------------------------------------------------
+
+```{r}
+selectInput("teamname", label = "Select a Team", multiple = FALSE, choices = teams)
+
+playerSelection <- reactive({
+  players(input$teamname)
+})
+
+renderUI({
+  selectInput("teamplayer", label = "Select a Player", multiple = FALSE, choices = playerSelection())
+})  
+```
+
+
+
+
+
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r}
+shotgraph <- reactive({
+  df %>% 
+    filter(result != "", player %in% input$teamplayer)
+})
+
+renderPlotly({
+  nbaplot <- ggplot(shotgraph(), aes(original_x, original_y))+
+    geom_point(aes(x = original_x, original_y, color = result), alpha = .75)+
+    facet_wrap(~season)+
+    xlim(-200,200)+
+    ylim(0, 400)
+  ggplotly(nbaplot)
+})
+
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+
+```
+
+### Chart C
+
+```{r}
+
+```
+
