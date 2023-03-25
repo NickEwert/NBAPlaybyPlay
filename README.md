@@ -1,3 +1,2 @@
 # NBAPlaybyPlay
-Reporeporepo
-A line I wrote from my computer 
+Dashboard and various analytics using NBA play by play data in RShiny 
